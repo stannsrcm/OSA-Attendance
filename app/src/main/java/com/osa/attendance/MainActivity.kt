@@ -1,8 +1,3 @@
-@file:OptIn(
-    androidx.camera.core.ExperimentalGetImage::class,
-    androidx.compose.material3.ExperimentalMaterial3Api::class
-)
-
 package com.osa.attendance
 
 import android.Manifest
@@ -57,7 +52,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCancellableCoroutine
 import kotlin.math.sqrt
 
-// ==================== 1. DATABASE & ENTITIES ====================
+// ==================== 1. ROOM DATABASE ====================
 
 @Entity(tableName = "admin")
 data class AdminEntity(
@@ -88,7 +83,7 @@ data class AttendanceEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val employeeId: Long,
     val employeeName: String,
-    val date: String,
+    val attDate: String,
     val checkInTime: Long,
     val checkOutTime: Long? = null,
     val isManual: Boolean = false,
@@ -115,11 +110,11 @@ interface OSADao {
     @Query("SELECT * FROM face_templates")
     suspend fun getAllTemplates(): List<FaceTemplateEntity>
 
-    @Query("SELECT * FROM attendance WHERE date = :date ORDER BY checkInTime DESC")
-    fun getTodayAttendanceFlow(date: String): Flow<List<AttendanceEntity>>
+    @Query("SELECT * FROM attendance WHERE attDate = :targetDate ORDER BY checkInTime DESC")
+    fun getTodayAttendanceFlow(targetDate: String): Flow<List<AttendanceEntity>>
 
-    @Query("SELECT * FROM attendance WHERE employeeId = :empId AND date = :date LIMIT 1")
-    suspend fun getAttendance(empId: Long, date: String): AttendanceEntity?
+    @Query("SELECT * FROM attendance WHERE employeeId = :empId AND attDate = :targetDate LIMIT 1")
+    suspend fun getAttendance(empId: Long, targetDate: String): AttendanceEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveAttendance(att: AttendanceEntity)
@@ -187,7 +182,7 @@ object FaceEngine {
     }
 }
 
-// ==================== 3. MAIN ACTIVITY & UI ====================
+// ==================== 3. USER INTERFACE ====================
 
 class MainActivity : ComponentActivity() {
     private val reqPerms = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
@@ -402,21 +397,23 @@ fun CameraAttendanceView(db: AppDatabase) {
                                 } else {
                                     val liveFeatures = FaceEngine.extractFeatures(bmp)
                                     val templates = db.dao().getAllTemplates()
-                                    var matchId: Long? = null
+                                    var matchedEmployeeId: Long? = null
+
                                     for (t in templates) {
                                         val vec = t.vector.split(",").map { it.toFloat() }.toFloatArray()
                                         if (FaceEngine.similarity(liveFeatures, vec) > 0.85f) {
-                                            matchId = t.employeeId
+                                            matchedEmployeeId = t.employeeId
                                             break
                                         }
                                     }
 
-                                    if (matchId != null) {
+                                    val finalId = matchedEmployeeId
+                                    if (finalId != null) {
                                         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                                        val existing = db.dao().getAttendance(matchId, today)
+                                        val existing = db.dao().getAttendance(finalId, today)
                                         val now = System.currentTimeMillis()
                                         if (existing == null) {
-                                            db.dao().saveAttendance(AttendanceEntity(employeeId = matchId, employeeName = "Employee #$matchId", date = today, checkInTime = now))
+                                            db.dao().saveAttendance(AttendanceEntity(employeeId = finalId, employeeName = "Employee #$finalId", attDate = today, checkInTime = now))
                                             withContext(Dispatchers.Main) { banner = "CHECK-IN Recorded!" }
                                         } else if (existing.checkOutTime == null && (now - existing.checkInTime > 15000)) {
                                             db.dao().saveAttendance(existing.copy(checkOutTime = now))
@@ -493,7 +490,7 @@ fun ManualAttendanceView(db: AppDatabase, onDone: () -> Unit) {
             val emp = employees.find { it.id == selectedId } ?: return@Button
             scope.launch(Dispatchers.IO) {
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                db.dao().saveAttendance(AttendanceEntity(employeeId = emp.id, employeeName = emp.fullName, date = today, checkInTime = System.currentTimeMillis(), isManual = true, reason = reason))
+                db.dao().saveAttendance(AttendanceEntity(employeeId = emp.id, employeeName = emp.fullName, attDate = today, checkInTime = System.currentTimeMillis(), isManual = true, reason = reason))
                 withContext(Dispatchers.Main) { onDone() }
             }
         }, modifier = Modifier.fillMaxWidth().height(50.dp)) {

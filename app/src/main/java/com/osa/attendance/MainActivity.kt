@@ -37,6 +37,7 @@ import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.security.spec.KeySpec
 import java.text.SimpleDateFormat
@@ -45,7 +46,6 @@ import java.util.concurrent.Executors
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCancellableCoroutine
 import kotlin.math.sqrt
 
 // ==================== 1. NATIVE OFFLINE SQLITE DATABASE ====================
@@ -327,9 +327,8 @@ fun DashboardView(db: DatabaseHelper) {
     var logs by remember { mutableStateOf<List<AttendanceModel>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            logs = db.getTodayAttendance(today)
-        }
+        val data = withContext(Dispatchers.IO) { db.getTodayAttendance(today) }
+        logs = data
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -369,7 +368,6 @@ fun DashboardView(db: DatabaseHelper) {
     }
 }
 
-@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun CameraAttendanceView(db: DatabaseHelper) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -485,9 +483,8 @@ fun ManualAttendanceView(db: DatabaseHelper, onDone: () -> Unit) {
     var reason by remember { mutableStateOf("Camera malfunction") }
 
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            employees = db.getEmployees()
-        }
+        val data = withContext(Dispatchers.IO) { db.getEmployees() }
+        employees = data
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

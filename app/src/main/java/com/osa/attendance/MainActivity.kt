@@ -1,3 +1,8 @@
+@file:OptIn(
+    androidx.camera.core.ExperimentalGetImage::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class
+)
+
 package com.osa.attendance
 
 import android.Manifest
@@ -12,15 +17,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +47,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.SecureRandom
 import java.security.spec.KeySpec
 import java.text.SimpleDateFormat
 import java.util.*
@@ -52,7 +57,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCancellableCoroutine
 import kotlin.math.sqrt
 
-// ==================== 1. ROOM DATABASE ====================
+// ==================== 1. DATABASE ====================
 
 @Entity(tableName = "admin")
 data class AdminEntity(
@@ -232,25 +237,25 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentTab == 0, 
                         onClick = { currentTab = 0 }, 
-                        icon = { Icon(Icons.Default.Dashboard, contentDescription = null) }, 
+                        icon = { Icon(Icons.Default.Home, contentDescription = null) }, 
                         label = { Text("Dashboard") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 1, 
                         onClick = { currentTab = 1 }, 
-                        icon = { Icon(Icons.Default.CameraAlt, contentDescription = null) }, 
+                        icon = { Icon(Icons.Default.Check, contentDescription = null) }, 
                         label = { Text("Attendance") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 2, 
                         onClick = { currentTab = 2 }, 
-                        icon = { Icon(Icons.Default.PersonAdd, contentDescription = null) }, 
+                        icon = { Icon(Icons.Default.Person, contentDescription = null) }, 
                         label = { Text("Register") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 3, 
                         onClick = { currentTab = 3 }, 
-                        icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) }, 
+                        icon = { Icon(Icons.Default.Edit, contentDescription = null) }, 
                         label = { Text("Manual") }
                     )
                 }

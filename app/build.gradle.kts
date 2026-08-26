@@ -33,10 +33,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-opt-in=androidx.camera.core.ExperimentalGetImage",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
-        )
     }
 
     buildFeatures {
@@ -62,9 +58,8 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
 
-    // Room Database (Offline Storage)
+    // Room Database (100% Offline)
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
@@ -75,6 +70,6 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.1")
     implementation("androidx.camera:camera-view:1.3.1")
 
-    // ML Kit Face Detection (100% Offline)
+    // ML Kit Face Detection (Bundled On-Device)
     implementation("com.google.mlkit:face-detection:16.1.6")
 }

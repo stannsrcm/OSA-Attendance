@@ -1,3 +1,8 @@
+@file:OptIn(
+    androidx.camera.core.ExperimentalGetImage::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class
+)
+
 package com.osa.attendance
 
 import android.Manifest
@@ -23,12 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 import androidx.room.*
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
@@ -129,7 +134,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-// ==================== 2. LOCAL SECURITY & ML ====================
+// ==================== 2. SECURITY & ML ====================
 
 object SecurityUtils {
     fun hash(pass: String, salt: String): String {
@@ -141,11 +146,13 @@ object SecurityUtils {
 }
 
 object FaceEngine {
-    private val detector = FaceDetection.getClient(
-        FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-            .build()
-    )
+    private val detector by lazy {
+        FaceDetection.getClient(
+            FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                .build()
+        )
+    }
 
     suspend fun detectFaces(bmp: Bitmap): List<Rect> = suspendCancellableCoroutine { cont ->
         detector.process(InputImage.fromBitmap(bmp, 0))
@@ -357,7 +364,7 @@ fun DashboardView(db: AppDatabase) {
 @Composable
 fun CameraAttendanceView(db: AppDatabase) {
     val ctx = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = ctx as LifecycleOwner
     val scope = rememberCoroutineScope()
     var banner by remember { mutableStateOf("Position face in frame") }
 

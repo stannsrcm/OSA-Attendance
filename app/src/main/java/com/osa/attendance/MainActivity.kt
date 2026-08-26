@@ -1,8 +1,3 @@
-@file:OptIn(
-    androidx.camera.core.ExperimentalGetImage::class,
-    androidx.compose.material3.ExperimentalMaterial3Api::class
-)
-
 package com.osa.attendance
 
 import android.Manifest
@@ -22,11 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -237,25 +227,25 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentTab == 0, 
                         onClick = { currentTab = 0 }, 
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) }, 
+                        icon = { Text("📊", fontSize = 18.sp) }, 
                         label = { Text("Dashboard") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 1, 
                         onClick = { currentTab = 1 }, 
-                        icon = { Icon(Icons.Default.Check, contentDescription = null) }, 
+                        icon = { Text("📷", fontSize = 18.sp) }, 
                         label = { Text("Attendance") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 2, 
                         onClick = { currentTab = 2 }, 
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) }, 
+                        icon = { Text("👤", fontSize = 18.sp) }, 
                         label = { Text("Register") }
                     )
                     NavigationBarItem(
                         selected = currentTab == 3, 
                         onClick = { currentTab = 3 }, 
-                        icon = { Icon(Icons.Default.Edit, contentDescription = null) }, 
+                        icon = { Text("📝", fontSize = 18.sp) }, 
                         label = { Text("Manual") }
                     )
                 }

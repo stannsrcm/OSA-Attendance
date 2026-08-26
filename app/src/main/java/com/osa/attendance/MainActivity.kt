@@ -1,3 +1,8 @@
+@file:OptIn(
+    androidx.camera.core.ExperimentalGetImage::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class
+)
+
 package com.osa.attendance
 
 import android.Manifest
@@ -5,7 +10,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Bundle
-import android.view.ViewGroup
+import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -140,7 +145,8 @@ object SecurityUtils {
     fun hash(pass: String, salt: String): String {
         val spec: KeySpec = PBEKeySpec(pass.toCharArray(), salt.toByteArray(), 5000, 256)
         val f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-        return Base64.getEncoder().encodeToString(f.generateSecret(spec).encoded)
+        val bytes = f.generateSecret(spec).encoded
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 }
 
@@ -153,8 +159,12 @@ object FaceEngine {
 
     suspend fun detectFaces(bmp: Bitmap): List<Rect> = suspendCancellableCoroutine { cont ->
         detector.process(InputImage.fromBitmap(bmp, 0))
-            .addOnSuccessListener { faces -> cont.resume(faces.map { it.boundingBox }) }
-            .addOnFailureListener { cont.resume(emptyList()) }
+            .addOnSuccessListener { faces -> 
+                if (cont.isActive) cont.resume(faces.map { it.boundingBox }) 
+            }
+            .addOnFailureListener { 
+                if (cont.isActive) cont.resume(emptyList()) 
+            }
     }
 
     fun extractFeatures(bmp: Bitmap): FloatArray {
@@ -200,12 +210,11 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val ctx = LocalContext.current
     val db = remember { AppDatabase.get(ctx) }
-    val scope = rememberCoroutineScope()
 
     var isReady by remember { mutableStateOf(false) }
     var hasAdmin by remember { mutableStateOf(false) }
     var isAuthed by remember { mutableStateOf(false) }
-    var currentTab by remember { mutableStateOf(0) } // 0: Dash, 1: Cam, 2: Reg, 3: Manual
+    var currentTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -225,10 +234,30 @@ fun AppNavigation() {
         Scaffold(
             bottomBar = {
                 NavigationBar {
-                    NavigationBarItem(selected = currentTab == 0, onClick = { currentTab = 0 }, icon = { Icon(Icons.Default.Dashboard, null) }, label = { Text("Dashboard") })
-                    NavigationBarItem(selected = currentTab == 1, onClick = { currentTab = 1 }, icon = { Icon(Icons.Default.CameraAlt, null) }, label = { Text("Attendance") })
-                    NavigationBarItem(selected = currentTab == 2, onClick = { currentTab = 2 }, icon = { Icon(Icons.Default.PersonAdd, null) }, label = { Text("Register") })
-                    NavigationBarItem(selected = currentTab == 3, onClick = { currentTab = 3 }, icon = { Icon(Icons.Default.EditCalendar, null) }, label = { Text("Manual") })
+                    NavigationBarItem(
+                        selected = currentTab == 0, 
+                        onClick = { currentTab = 0 }, 
+                        icon = { Icon(Icons.Default.Dashboard, contentDescription = null) }, 
+                        label = { Text("Dashboard") }
+                    )
+                    NavigationBarItem(
+                        selected = currentTab == 1, 
+                        onClick = { currentTab = 1 }, 
+                        icon = { Icon(Icons.Default.CameraAlt, contentDescription = null) }, 
+                        label = { Text("Attendance") }
+                    )
+                    NavigationBarItem(
+                        selected = currentTab == 2, 
+                        onClick = { currentTab = 2 }, 
+                        icon = { Icon(Icons.Default.PersonAdd, contentDescription = null) }, 
+                        label = { Text("Register") }
+                    )
+                    NavigationBarItem(
+                        selected = currentTab == 3, 
+                        onClick = { currentTab = 3 }, 
+                        icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) }, 
+                        label = { Text("Manual") }
+                    )
                 }
             }
         ) { padding ->
